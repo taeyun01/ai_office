@@ -6,6 +6,7 @@ import { OfficeScene } from "@/components/scene/office-scene";
 import { subscribeOffice } from "@/lib/realtime";
 import { useOfficeStore, type OfficeState } from "@/stores/office-store";
 import type { LlmProvider } from "@/types";
+import { ActivityPanel } from "./activity-panel";
 import { AdminToolbar } from "./admin-toolbar";
 import { EmployeePanel } from "./employee-panel";
 import { KpiBar } from "./kpi-bar";
@@ -70,7 +71,7 @@ export function OfficeClient({
       <div className="absolute bottom-4 left-4">
         <KpiBar />
       </div>
-      <EmployeePanel isAdmin={isAdmin} providerHasKey={providerHasKey} />
+      {selectedId ? <EmployeePanel isAdmin={isAdmin} providerHasKey={providerHasKey} /> : <ActivityPanel />}
     </>
   );
 }
