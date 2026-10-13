@@ -15,3 +15,4 @@ export type LlmModel = Tables<"llm_models">;
 export type LlmProvider = Tables<"llm_providers">;
 export type BudgetSettings = Tables<"budget_settings">;
 export type AuditLog = Tables<"audit_logs">;
+export type Brief = Tables<"briefs">;

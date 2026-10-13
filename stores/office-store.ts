@@ -25,6 +25,7 @@ export type OfficeState = {
   setBudget: (b: BudgetSettings) => void;
   upsertProject: (p: Project) => void;
   removeProject: (id: string) => void;
+  upsertDepartment: (d: Department) => void;
   // Realtime 변경을 그대로 반영. 바뀐 row만 교체하므로 다른 직원 객체는 참조가 유지된다.
   upsert: (table: "employees" | "tasks" | "taskLogs", row: Employee | Task | TaskLog) => void;
   remove: (table: "employees" | "tasks" | "taskLogs", id: string) => void;
@@ -59,6 +60,12 @@ export const useOfficeStore = create<OfficeState>((set) => ({
       projects: s.projects.some((x) => x.id === p.id)
         ? s.projects.map((x) => (x.id === p.id ? p : x))
         : [...s.projects, p],
+    })),
+  upsertDepartment: (d) =>
+    set((s) => ({
+      departments: s.departments.some((x) => x.id === d.id)
+        ? s.departments.map((x) => (x.id === d.id ? d : x))
+        : [...s.departments, d],
     })),
   removeProject: (id) => set((s) => ({ projects: s.projects.filter((x) => x.id !== id) })),
   upsert: (table, row) => set((s) => ({ [table]: { ...s[table], [row.id]: row } })),

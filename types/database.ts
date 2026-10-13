@@ -56,6 +56,51 @@ export type Database = {
           },
         ]
       }
+      briefs: {
+        Row: {
+          brief: string
+          cost_usd: number
+          created_at: string
+          created_by: string | null
+          id: string
+          model_id: string | null
+          plan: Json
+          project_id: string
+          status: string
+          token_input: number
+          token_output: number
+          updated_at: string
+        }
+        Insert: {
+          brief: string
+          cost_usd?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          model_id?: string | null
+          plan?: Json
+          project_id: string
+          status?: string
+          token_input?: number
+          token_output?: number
+          updated_at?: string
+        }
+        Update: {
+          brief?: string
+          cost_usd?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          model_id?: string | null
+          plan?: Json
+          project_id?: string
+          status?: string
+          token_input?: number
+          token_output?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       budget_settings: {
         Row: {
           created_at: string
@@ -441,6 +486,7 @@ export type Database = {
       tasks: {
         Row: {
           assigned_employee_id: string
+          brief_id: string | null
           completed_at: string | null
           cost_usd: number
           created_at: string
@@ -463,6 +509,7 @@ export type Database = {
         }
         Insert: {
           assigned_employee_id: string
+          brief_id?: string | null
           completed_at?: string | null
           cost_usd?: number
           created_at?: string
@@ -485,6 +532,7 @@ export type Database = {
         }
         Update: {
           assigned_employee_id?: string
+          brief_id?: string | null
           completed_at?: string | null
           cost_usd?: number
           created_at?: string

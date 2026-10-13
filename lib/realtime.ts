@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useOfficeStore } from "@/stores/office-store";
-import type { BudgetSettings, Employee, Project, Task, TaskLog } from "@/types";
+import type { BudgetSettings, Department, Employee, Project, Task, TaskLog } from "@/types";
 
 const TABLES = {
   employees: "employees",
@@ -13,7 +13,7 @@ const TABLES = {
 // employees / tasks / task_logs / budget_settings 변경을 구독해 스토어에 반영. 해제 함수를 돌려준다.
 export function subscribeOffice() {
   const supabase = createClient();
-  const { upsert, remove, setBudget, upsertProject, removeProject } = useOfficeStore.getState();
+  const { upsert, remove, setBudget, upsertProject, removeProject, upsertDepartment } = useOfficeStore.getState();
   const channel = supabase.channel("office");
 
   for (const [table, key] of Object.entries(TABLES) as [keyof typeof TABLES, (typeof TABLES)[keyof typeof TABLES]][]) {
@@ -36,6 +36,11 @@ export function subscribeOffice() {
       if (payload.eventType === "DELETE") removeProject(String(payload.old.id));
       else upsertProject(payload.new as Project);
     },
+  );
+  channel.on(
+    "postgres_changes",
+    { event: "INSERT", schema: "public", table: "departments" },
+    (payload) => upsertDepartment(payload.new as Department),
   );
   channel.on(
     "postgres_changes",

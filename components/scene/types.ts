@@ -12,7 +12,7 @@ export type SceneEmployee = Pick<
 >;
 
 // 맵 경계 (부서 구역 시드 + 라운지/회의실 기준)
-export const MAP_BOUNDS = { minX: -16, maxX: 16, minZ: -8, maxZ: 16 } as const;
+export const MAP_BOUNDS = { minX: -24, maxX: 24, minZ: -8, maxZ: 18 } as const;
 
 // 라운지(휴게 공간): 소파 앞에 resting 직원이 앉는다
 export const LOUNGE = { x: -11, z: 15, w: 10, d: 6 } as const;

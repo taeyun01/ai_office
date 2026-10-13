@@ -1,12 +1,11 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { fieldClass, labelClass } from "@/components/ui/modal";
 import { createTask, type ActionResult } from "@/lib/actions/admin";
-import { NEW_PROJECT } from "@/lib/constants";
-import { useOfficeStore } from "@/stores/office-store";
 import type { Employee, Project } from "@/types";
+import { ProjectSelect } from "./project-select";
 
 export function TaskForm({
   projects,
@@ -20,39 +19,13 @@ export function TaskForm({
   onDone: () => void;
 }) {
   const [state, action, pending] = useActionState<ActionResult, FormData>(createTask, null);
-  const departments = useOfficeStore((s) => s.departments);
-  const [projectId, setProjectId] = useState(projects[0]?.id ?? NEW_PROJECT);
   useEffect(() => {
     if (state?.ok) onDone();
   }, [state, onDone]);
 
   return (
     <form action={action} className="flex flex-col gap-3">
-      <div>
-        <label className={labelClass}>프로젝트</label>
-        <select name="project_id" value={projectId} onChange={(e) => setProjectId(e.target.value)} required className={fieldClass}>
-          {projects.map((p) => (
-            <option key={p.id} value={p.id}>{p.name}</option>
-          ))}
-          <option value={NEW_PROJECT}>+ 새 프로젝트 만들기</option>
-        </select>
-      </div>
-      {projectId === NEW_PROJECT && (
-        <div className="grid grid-cols-2 gap-3 rounded-md border border-cyan-500/30 p-3">
-          <div>
-            <label className={labelClass}>새 프로젝트 이름</label>
-            <input name="new_project_name" required className={fieldClass} />
-          </div>
-          <div>
-            <label className={labelClass}>부서</label>
-            <select name="new_project_department_id" required className={fieldClass}>
-              {departments.map((d) => (
-                <option key={d.id} value={d.id}>{d.name}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      )}
+      <ProjectSelect projects={projects} />
       <div>
         <label className={labelClass}>담당 직원</label>
         <select name="assigned_employee_id" defaultValue={defaultEmployeeId} required className={fieldClass}>

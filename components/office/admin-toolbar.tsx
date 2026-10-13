@@ -8,6 +8,7 @@ import { runEngineNow, setGlobalPaused } from "@/lib/actions/engine";
 import { useOfficeStore } from "@/stores/office-store";
 import type { LlmProvider } from "@/types";
 import { EmployeeForm } from "./employee-form";
+import { BriefForm } from "./brief-form";
 import { MeetingPanel } from "./meeting-panel";
 import { TaskForm } from "./task-form";
 
@@ -19,6 +20,7 @@ export function AdminToolbar({
 }) {
   const globalPaused = useOfficeStore((s) => s.budget?.global_paused ?? false);
   const [modal, setModal] = useState<"hire" | "task" | "meeting" | null>(null);
+  const [taskMode, setTaskMode] = useState<"team" | "single">("team");
   const [running, startRun] = useTransition();
   const [runMsg, setRunMsg] = useState<string | null>(null);
   const departments = useOfficeStore((s) => s.departments);
@@ -62,8 +64,26 @@ export function AdminToolbar({
       <Modal open={modal === "meeting"} title="회의실로 호출" onClose={() => setModal(null)}>
         <MeetingPanel onDone={() => setModal(null)} />
       </Modal>
-      <Modal open={modal === "task"} title="작업 지시" onClose={() => setModal(null)}>
-        <TaskForm projects={projects} employees={Object.values(employees)} onDone={() => setModal(null)} />
+      <Modal open={modal === "task"} title="작업 지시" onClose={() => setModal(null)} wide={taskMode === "team"}>
+        <div className="mb-4 grid grid-cols-2 gap-1 rounded-lg bg-slate-800/70 p-1 text-sm" role="tablist">
+          {([["team", "팀에 맡기기 (AI 팀장)"], ["single", "직원에게 직접"]] as const).map(([k, label]) => (
+            <button
+              key={k}
+              type="button"
+              role="tab"
+              aria-selected={taskMode === k}
+              onClick={() => setTaskMode(k)}
+              className={`rounded-md px-3 py-1.5 ${taskMode === k ? "bg-cyan-500/20 text-cyan-200" : "text-slate-400 hover:text-slate-200"}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        {taskMode === "team" ? (
+          <BriefForm projects={projects} onDone={() => setModal(null)} />
+        ) : (
+          <TaskForm projects={projects} employees={Object.values(employees)} onDone={() => setModal(null)} />
+        )}
       </Modal>
     </div>
   );

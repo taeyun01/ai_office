@@ -62,10 +62,10 @@ export function BackWall() {
   return (
     <group position={[0, 0, -11]}>
       <mesh position={[0, 1.6, 0]} receiveShadow>
-        <boxGeometry args={[40, 3.2, 0.3]} />
+        <boxGeometry args={[60, 3.2, 0.3]} />
         <meshStandardMaterial color="#1e2742" />
       </mesh>
-      {[-15, -9, -3, 3, 9, 15].map((x) => (
+      {[-27, -21, -15, -9, -3, 3, 9, 15, 21, 27].map((x) => (
         <group key={x} position={[x, 1.8, 0.17]}>
           <mesh>
             <boxGeometry args={[3.2, 1.8, 0.06]} />
