@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { LogoutButton } from "@/components/logout-button";
 import { OfficeScene } from "@/components/scene/office-scene";
@@ -65,6 +66,7 @@ export function OfficeClient({
         <TopBar departments={departments} filters={filters} onChange={setFilters} />
       </div>
       <div className="absolute right-4 top-4 flex items-center gap-2">
+        <Link href="/results" className="text-xs text-slate-300 hover:underline">결과물</Link>
         {isAdmin && <AdminToolbar providerHasKey={providerHasKey} />}
         <LogoutButton />
       </div>

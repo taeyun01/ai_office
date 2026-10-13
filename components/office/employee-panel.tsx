@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Markdown } from "@/components/ui/markdown";
 import { Modal } from "@/components/ui/modal";
 import { deleteEmployee, setEmployeePaused } from "@/lib/actions/admin";
 import { useOfficeStore } from "@/stores/office-store";
@@ -151,7 +152,7 @@ export function EmployeePanel({
         />
       </Modal>
       <Modal open={!!openTask} title={openTask?.title ?? ""} onClose={() => setOpenTask(null)} wide>
-        <pre className="whitespace-pre-wrap text-sm text-slate-200">{openTask?.result}</pre>
+        <Markdown>{openTask?.result ?? ""}</Markdown>
       </Modal>
     </aside>
   );

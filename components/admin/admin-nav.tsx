@@ -2,6 +2,7 @@ import Link from "next/link";
 
 const LINKS = [
   { href: "/office", label: "오피스" },
+  { href: "/results", label: "결과물" },
   { href: "/admin/users", label: "사용자" },
   { href: "/admin/projects", label: "프로젝트" },
   { href: "/admin/models", label: "모델 · API 키" },
