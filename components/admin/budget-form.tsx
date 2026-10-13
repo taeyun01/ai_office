@@ -22,6 +22,7 @@ export function BudgetForm({ budget, models }: { budget: BudgetSettings; models:
 
   return (
     <form action={action} className="grid gap-3 rounded-lg border p-4 md:grid-cols-2">
+      <input type="hidden" name="workspace_id" value={budget.workspace_id} />
       <div>
         <label className={labelClass}>월 예산 (USD)</label>
         <input name="monthly_budget_usd" type="number" min={0} step="0.01" defaultValue={budget.monthly_budget_usd} className={fieldClass} />

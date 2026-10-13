@@ -10,8 +10,8 @@ export async function login(formData: FormData) {
     password: String(formData.get("password")),
   });
   if (error) redirect(`/login?error=${encodeURIComponent(error.message)}`);
-  // 승인 상태에 따른 최종 목적지는 미들웨어가 정한다
-  redirect("/office");
+  // 승인 상태에 따른 최종 목적지는 미들웨어가 정한다 (승인됨 → 프로젝트 목록)
+  redirect("/projects");
 }
 
 export async function signup(formData: FormData) {

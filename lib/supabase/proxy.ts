@@ -77,11 +77,13 @@ export async function updateSession(request: NextRequest) {
       ? supabaseResponse
       : redirectTo(home);
   }
-  if (isPublic || ["/", "/pending", "/rejected"].includes(path)) {
-    return redirectTo("/office");
+  // 시작 화면은 프로젝트 목록. 예전 주소(/office, /results)도 여기로.
+  if (isPublic || ["/", "/pending", "/rejected", "/office", "/results"].includes(path)) {
+    return redirectTo("/projects");
   }
-  if (path.startsWith("/admin") && profile?.role !== "admin") {
-    return redirectTo("/office");
+  const isAdminPath = path.startsWith("/admin") || /^\/p\/[^/]+\/admin(\/|$)/.test(path);
+  if (isAdminPath && profile?.role !== "admin") {
+    return redirectTo("/projects");
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.

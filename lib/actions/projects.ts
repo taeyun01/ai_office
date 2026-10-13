@@ -26,7 +26,7 @@ export async function saveProject(_prev: ActionResult, fd: FormData): Promise<Ac
     if (!Number.isFinite(row.revenue) || row.revenue < 0) throw new Error("매출은 0 이상 숫자여야 합니다.");
     const saved = await upsertProject(db, row);
     await insertAuditLog(db, { actor_id: me.id, action: id ? "project.update" : "project.create", target_type: "project", target_id: saved.id });
-    revalidatePath("/admin/projects");
+    revalidatePath("/", "layout");
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "실패" };
@@ -43,7 +43,7 @@ export async function deleteProject(_prev: ActionResult, fd: FormData): Promise<
     if (count) throw new Error(`작업 ${count}개가 남아 있어 삭제할 수 없습니다. 상태를 '완료'로 바꾸세요.`);
     await dbDeleteProject(db, id);
     await insertAuditLog(db, { actor_id: me.id, action: "project.delete", target_type: "project", target_id: id });
-    revalidatePath("/admin/projects");
+    revalidatePath("/", "layout");
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "실패" };

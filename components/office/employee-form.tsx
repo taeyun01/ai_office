@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { fieldClass, labelClass } from "@/components/ui/modal";
 import { createEmployee, updateEmployee, type ActionResult } from "@/lib/actions/admin";
 import { DEPARTMENT_COLORS, NEW_DEPARTMENT } from "@/lib/constants";
+import { useOfficeStore } from "@/stores/office-store";
 import type { Department, Employee, LlmModel, LlmProvider } from "@/types";
 
 const PROVIDER_LABEL: Record<LlmModel["provider"], string> = {
@@ -35,6 +36,7 @@ export function EmployeeForm({
     if (state?.ok) onDone();
   }, [state, onDone]);
 
+  const workspaceId = useOfficeStore((s) => s.workspaceId);
   const [departmentId, setDepartmentId] = useState(employee?.department_id ?? departments[0]?.id ?? NEW_DEPARTMENT);
   const nextColor = DEPARTMENT_COLORS.find((c) => !departments.some((d) => d.color.toLowerCase() === c)) ?? DEPARTMENT_COLORS[0];
   const enabled = llmModels.filter((m) => m.is_enabled);
@@ -49,6 +51,7 @@ export function EmployeeForm({
   return (
     <form action={action} className="flex flex-col gap-3">
       {employee && <input type="hidden" name="id" value={employee.id} />}
+      <input type="hidden" name="workspace_id" value={workspaceId} />
       <div>
         <label className={labelClass}>부서</label>
         <select name="department_id" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} required className={fieldClass}>

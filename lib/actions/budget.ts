@@ -27,11 +27,11 @@ export async function updateBudgetSettings(_prev: ActionResult, fd: FormData): P
       default_model_simple_id: String(fd.get("default_model_simple_id") || "") || null,
       default_model_complex_id: String(fd.get("default_model_complex_id") || "") || null,
     };
-    const { error } = await db.from("budget_settings").update(patch).eq("singleton", true);
+    const workspaceId = String(fd.get("workspace_id") ?? "");
+    const { error } = await db.from("budget_settings").update(patch).eq("workspace_id", workspaceId);
     if (error) throw error;
-    await insertAuditLog(db, { actor_id: me.id, action: "budget.update" });
-    revalidatePath("/admin/costs");
-    revalidatePath("/office");
+    await insertAuditLog(db, { actor_id: me.id, action: "budget.update", target_type: "workspace", target_id: workspaceId });
+    revalidatePath(`/p/${workspaceId}`, "layout");
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "실패" };

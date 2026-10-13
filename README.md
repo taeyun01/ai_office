@@ -16,7 +16,8 @@ Supabase 쪽은 `supabase/migrations/*.sql`을 순서대로 적용하고 `supaba
 
 ## 구조
 
-- `app/` — 라우트. `login`, `signup`, `pending`, `rejected`, `office`(3D 오피스), `admin/users|models|costs`
+- `app/` — 라우트. `login`, `signup`, `pending`, `rejected`, `projects`(시작 화면: 프로젝트 목록·생성), `p/[id]`(프로젝트의 3D 오피스), `p/[id]/results`, `p/[id]/admin/work|costs`, 전역 `admin/users|models`
+- 용어: **프로젝트** = DB `workspaces`(오피스 하나 + GitHub 저장소 하나). 오피스 안의 **업무** = DB `projects`. 부서·직원·작업·예산은 모두 `workspace_id`로 프로젝트에 속하고, 하위 테이블의 `workspace_id`는 DB 트리거가 부모에서 채운다
 - `components/scene/` — R3F 3D 컴포넌트. props만 받고 DB 호출 없음
 - `components/office/` — 오피스 화면 UI (상단 바, KPI, 직원 패널, 관리자 툴바, 폼)
 - `components/admin/` — 관리자 페이지 UI

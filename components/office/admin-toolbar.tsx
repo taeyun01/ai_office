@@ -19,6 +19,7 @@ export function AdminToolbar({
   providerHasKey: Partial<Record<LlmProvider["provider"], boolean>>;
 }) {
   const globalPaused = useOfficeStore((s) => s.budget?.global_paused ?? false);
+  const workspaceId = useOfficeStore((s) => s.workspaceId);
   const [modal, setModal] = useState<"hire" | "task" | "meeting" | null>(null);
   const [taskMode, setTaskMode] = useState<"team" | "single">("team");
   const [running, startRun] = useTransition();
@@ -31,7 +32,7 @@ export function AdminToolbar({
   const run = () =>
     startRun(async () => {
       try {
-        await runEngineNow();
+        await runEngineNow(workspaceId);
         setRunMsg("엔진 실행 요청됨");
       } catch (e) {
         setRunMsg(e instanceof Error ? e.message : "실패");
@@ -42,9 +43,9 @@ export function AdminToolbar({
   return (
     <div className="flex items-center gap-2">
       <Link href="/admin/users" className="text-xs text-slate-300 hover:underline">사용자</Link>
-      <Link href="/admin/projects" className="text-xs text-slate-300 hover:underline">프로젝트</Link>
+      <Link href={`/p/${workspaceId}/admin/work`} className="text-xs text-slate-300 hover:underline">업무</Link>
       <Link href="/admin/models" className="text-xs text-slate-300 hover:underline">모델 · 키</Link>
-      <Link href="/admin/costs" className="text-xs text-slate-300 hover:underline">비용</Link>
+      <Link href={`/p/${workspaceId}/admin/costs`} className="text-xs text-slate-300 hover:underline">비용</Link>
       <Button size="sm" onClick={() => setModal("hire")}>직원 채용</Button>
       <Button size="sm" variant="outline" onClick={() => setModal("task")}>작업 지시</Button>
       <Button size="sm" variant="outline" onClick={() => setModal("meeting")}>회의 소집</Button>
@@ -52,6 +53,7 @@ export function AdminToolbar({
         {running ? "실행 중…" : "지금 실행"}
       </Button>
       <form action={setGlobalPaused}>
+        <input type="hidden" name="workspace_id" value={workspaceId} />
         <input type="hidden" name="paused" value={String(!globalPaused)} />
         <Button size="sm" variant={globalPaused ? "destructive" : "outline"} type="submit">
           {globalPaused ? "긴급 정지 해제" : "긴급 정지"}

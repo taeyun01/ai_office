@@ -11,7 +11,7 @@ export async function resolveProjectId(db: Db, actorId: string, fd: FormData) {
   if (id !== NEW_PROJECT) return id;
   const name = String(fd.get("new_project_name") ?? "").trim();
   const departmentId = String(fd.get("new_project_department_id") ?? "");
-  if (!name || !departmentId) throw new Error("새 프로젝트 이름과 부서를 입력하세요.");
+  if (!name || !departmentId) throw new Error("새 업무 이름과 부서를 입력하세요.");
   const { data, error } = await db
     .from("projects")
     .insert({ name, department_id: departmentId, status: "active" })
@@ -28,12 +28,17 @@ export async function resolveDepartmentId(db: Db, actorId: string, fd: FormData)
   const name = String(fd.get("new_department_name") ?? "").trim();
   const color = String(fd.get("new_department_color") ?? "");
   if (!name) throw new Error("새 부서 이름을 입력하세요.");
+  const workspaceId = String(fd.get("workspace_id") ?? "");
   if (!/^#[0-9a-fA-F]{6}$/.test(color)) throw new Error("부서 색이 올바르지 않습니다.");
-  const { data: existing, error: listError } = await db.from("departments").select("position_x, position_z");
+  if (!workspaceId) throw new Error("프로젝트 정보가 없습니다.");
+  const { data: existing, error: listError } = await db
+    .from("departments")
+    .select("position_x, position_z")
+    .eq("workspace_id", workspaceId);
   if (listError) throw listError;
   const { data, error } = await db
     .from("departments")
-    .insert({ name, color, slug: `dept-${crypto.randomUUID().slice(0, 8)}`, ...pickDepartmentSlot(existing) })
+    .insert({ workspace_id: workspaceId, name, color, slug: `dept-${crypto.randomUUID().slice(0, 8)}`, ...pickDepartmentSlot(existing) })
     .select("id")
     .single();
   if (error) throw error;

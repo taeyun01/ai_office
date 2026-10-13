@@ -10,41 +10,49 @@ const TABLES = {
   task_logs: "taskLogs",
 } as const;
 
-// employees / tasks / task_logs / budget_settings 변경을 구독해 스토어에 반영. 해제 함수를 돌려준다.
-export function subscribeOffice() {
+// 한 프로젝트(workspace)의 변경만 구독해 스토어에 반영. 해제 함수를 돌려준다.
+export function subscribeOffice(workspaceId: string) {
   const supabase = createClient();
   const { upsert, remove, setBudget, upsertProject, removeProject, upsertDepartment } = useOfficeStore.getState();
-  const channel = supabase.channel("office");
+  const channel = supabase.channel(`office-${workspaceId}`);
+  const filter = `workspace_id=eq.${workspaceId}`;
 
   for (const [table, key] of Object.entries(TABLES) as [keyof typeof TABLES, (typeof TABLES)[keyof typeof TABLES]][]) {
     channel.on(
       "postgres_changes",
-      { event: "*", schema: "public", table },
-      (payload) => {
-        if (payload.eventType === "DELETE") {
-          remove(key, String(payload.old.id));
-        } else {
-          upsert(key, payload.new as Employee | Task | TaskLog);
-        }
-      },
+      { event: "INSERT", schema: "public", table, filter },
+      (payload) => upsert(key, payload.new as Employee | Task | TaskLog),
+    );
+    channel.on(
+      "postgres_changes",
+      { event: "UPDATE", schema: "public", table, filter },
+      (payload) => upsert(key, payload.new as Employee | Task | TaskLog),
+    );
+    // 다른 프로젝트의 삭제 이벤트도 오지만, 스토어에 없는 id라 무시된다
+    channel.on(
+      "postgres_changes",
+      { event: "DELETE", schema: "public", table },
+      (payload) => remove(key, String(payload.old.id)),
     );
   }
   channel.on(
     "postgres_changes",
-    { event: "*", schema: "public", table: "projects" },
-    (payload) => {
-      if (payload.eventType === "DELETE") removeProject(String(payload.old.id));
-      else upsertProject(payload.new as Project);
-    },
+    { event: "*", schema: "public", table: "projects", filter },
+    (payload) => upsertProject(payload.new as Project),
   );
   channel.on(
     "postgres_changes",
-    { event: "INSERT", schema: "public", table: "departments" },
+    { event: "DELETE", schema: "public", table: "projects" },
+    (payload) => removeProject(String(payload.old.id)),
+  );
+  channel.on(
+    "postgres_changes",
+    { event: "INSERT", schema: "public", table: "departments", filter },
     (payload) => upsertDepartment(payload.new as Department),
   );
   channel.on(
     "postgres_changes",
-    { event: "UPDATE", schema: "public", table: "budget_settings" },
+    { event: "UPDATE", schema: "public", table: "budget_settings", filter },
     (payload) => setBudget(payload.new as BudgetSettings),
   );
 

@@ -40,7 +40,7 @@ export function KpiBar() {
 
   return (
     <div className="flex flex-wrap gap-2">
-      <Tile label="진행 중 프로젝트" value={String(projects.filter((p) => p.status === "active").length)} sub={`전체 ${projects.length}`} />
+      <Tile label="진행 중 업무" value={String(projects.filter((p) => p.status === "active").length)} sub={`전체 ${projects.length}`} />
       <Tile label="작업 완료율" value={all.length ? `${Math.round((done.length / all.length) * 100)}%` : "-"} sub={`${done.length} / ${all.length}`} />
       <Tile label="직원 가동률" value={emps.length ? `${Math.round((working / emps.length) * 100)}%` : "-"} sub={`${working} / ${emps.length} 작업 중`} />
       <Tile label="오늘 완료" value={String(doneToday)} sub="작업" />

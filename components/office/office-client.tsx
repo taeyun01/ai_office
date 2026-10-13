@@ -6,27 +6,29 @@ import { LogoutButton } from "@/components/logout-button";
 import { OfficeScene } from "@/components/scene/office-scene";
 import { subscribeOffice } from "@/lib/realtime";
 import { useOfficeStore, type OfficeState } from "@/stores/office-store";
-import type { LlmProvider } from "@/types";
+import type { LlmProvider, Workspace } from "@/types";
 import { ActivityPanel } from "./activity-panel";
 import { AdminToolbar } from "./admin-toolbar";
 import { EmployeePanel } from "./employee-panel";
 import { KpiBar } from "./kpi-bar";
 import { TopBar, type OfficeFilters } from "./top-bar";
 
-type Initial = Parameters<OfficeState["hydrate"]>[0];
+type Initial = Omit<Parameters<OfficeState["hydrate"]>[0], "workspaceId">;
 
 export function OfficeClient({
+  workspace,
   initial,
   isAdmin,
   providerHasKey,
 }: {
+  workspace: Workspace;
   initial: Initial;
   isAdmin: boolean;
   providerHasKey: Partial<Record<LlmProvider["provider"], boolean>>;
 }) {
   // 첫 렌더 전에 스토어를 채워 빈 화면이 깜빡이지 않게
-  useState(() => useOfficeStore.getState().hydrate(initial));
-  useEffect(() => subscribeOffice(), []);
+  useState(() => useOfficeStore.getState().hydrate({ ...initial, workspaceId: workspace.id }));
+  useEffect(() => subscribeOffice(workspace.id), [workspace.id]);
 
   const departments = useOfficeStore((s) => s.departments);
   const employees = useOfficeStore((s) => s.employees);
@@ -63,10 +65,10 @@ export function OfficeClient({
         highlightDepartmentId={filters.departmentId}
       />
       <div className="absolute left-4 top-4">
-        <TopBar departments={departments} filters={filters} onChange={setFilters} />
+        <TopBar workspace={workspace} departments={departments} filters={filters} onChange={setFilters} />
       </div>
       <div className="absolute right-4 top-4 flex items-center gap-2">
-        <Link href="/results" className="text-xs text-slate-300 hover:underline">결과물</Link>
+        <Link href={`/p/${workspace.id}/results`} className="text-xs text-slate-300 hover:underline">결과물</Link>
         {isAdmin && <AdminToolbar providerHasKey={providerHasKey} />}
         <LogoutButton />
       </div>

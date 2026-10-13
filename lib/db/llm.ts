@@ -11,8 +11,8 @@ export async function listLlmModels(db: Db) {
   return data;
 }
 
-export async function getBudgetSettings(db: Db) {
-  const { data, error } = await db.from("budget_settings").select("*").single();
+export async function getBudgetSettings(db: Db, workspaceId: string) {
+  const { data, error } = await db.from("budget_settings").select("*").eq("workspace_id", workspaceId).single();
   if (error) throw error;
   return data;
 }

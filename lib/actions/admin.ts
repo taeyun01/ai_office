@@ -5,7 +5,6 @@ import {
   deleteEmployee as dbDeleteEmployee,
   insertEmployee,
   insertTask,
-  listEmployees,
   updateEmployee as dbUpdateEmployee,
 } from "@/lib/db/office";
 import { insertAuditLog } from "@/lib/db/profiles";
@@ -53,9 +52,12 @@ async function freeSeat(db: Awaited<ReturnType<typeof requireAdmin>>["db"], depa
     .eq("id", departmentId)
     .single();
   if (error) throw error;
-  const taken = (await listEmployees(db)).filter(
-    (e) => e.department_id === departmentId && e.id !== excludeId,
-  );
+  const { data: taken, error: takenError } = await db
+    .from("employees")
+    .select("seat_x, seat_z")
+    .eq("department_id", departmentId)
+    .neq("id", excludeId ?? "00000000-0000-0000-0000-000000000000");
+  if (takenError) throw takenError;
   return pickSeat(dept, taken);
 }
 

@@ -63,17 +63,21 @@ Deno.serve(async (req) => {
   const brief = String(body.brief ?? "").trim();
   if (!projectId || brief.length < 5) return json({ error: "프로젝트와 브리프(5자 이상)를 입력하세요." });
 
+  // 업무가 속한 프로젝트(workspace) 안에서만 계획한다
+  const { data: project } = await db.from("projects").select("name, description, workspace_id").eq("id", projectId).single();
+  if (!project) return json({ error: "업무를 찾을 수 없습니다." });
+  const ws = project.workspace_id;
+
   // 비용 안전장치: 긴급 정지·월 예산은 계획 단계에도 적용
-  const { data: settings } = await db.from("budget_settings").select("*").single();
+  const { data: settings } = await db.from("budget_settings").select("*").eq("workspace_id", ws).single();
   if (settings?.global_paused) return json({ error: "긴급 정지 중이라 계획을 세울 수 없습니다." });
-  const { data: monthCost } = await db.rpc("month_cost_usd");
+  const { data: monthCost } = await db.rpc("month_cost_usd", { p_workspace: ws });
   if (Number(monthCost) >= Number(settings?.monthly_budget_usd ?? 0)) return json({ error: "이번 달 예산을 다 썼습니다." });
 
-  const [{ data: employees }, { data: departments }, { data: models }, { data: project }] = await Promise.all([
-    db.from("employees").select("id, name, role, department_id, status").neq("status", "paused"),
-    db.from("departments").select("id, name"),
+  const [{ data: employees }, { data: departments }, { data: models }] = await Promise.all([
+    db.from("employees").select("id, name, role, department_id, status").eq("workspace_id", ws).neq("status", "paused"),
+    db.from("departments").select("id, name").eq("workspace_id", ws),
     db.from("llm_models").select("*").eq("is_enabled", true),
-    db.from("projects").select("name, description").eq("id", projectId).single(),
   ]);
   if (!employees?.length) return json({ error: "일할 수 있는 직원이 없습니다." });
 
@@ -100,7 +104,7 @@ Deno.serve(async (req) => {
 
   const deptName = new Map((departments ?? []).map((d) => [d.id, d.name]));
   const roster = employees.map((e) => ({ employee_id: e.id, name: e.name, role: e.role, department: deptName.get(e.department_id) }));
-  const prompt = `# 프로젝트\n${project?.name ?? ""}${project?.description ? ` — ${project.description}` : ""}\n\n# 대표의 브리프\n${brief}\n\n# 직원 목록\n${JSON.stringify(roster, null, 1)}`;
+  const prompt = `# 업무\n${project.name}${project.description ? ` — ${project.description}` : ""}\n\n# 대표의 브리프\n${brief}\n\n# 직원 목록\n${JSON.stringify(roster, null, 1)}`;
 
   try {
     const r = await generate({ provider: model.provider as Provider, modelName: model.model_name, apiKey, system: SYSTEM, prompt, maxTokens: 6000 });

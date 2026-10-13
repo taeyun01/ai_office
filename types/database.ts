@@ -70,6 +70,7 @@ export type Database = {
           token_input: number
           token_output: number
           updated_at: string
+          workspace_id: string
         }
         Insert: {
           brief: string
@@ -84,6 +85,7 @@ export type Database = {
           token_input?: number
           token_output?: number
           updated_at?: string
+          workspace_id?: string
         }
         Update: {
           brief?: string
@@ -98,6 +100,7 @@ export type Database = {
           token_input?: number
           token_output?: number
           updated_at?: string
+          workspace_id?: string
         }
         Relationships: []
       }
@@ -110,9 +113,9 @@ export type Database = {
           id: string
           max_tasks_per_run: number
           monthly_budget_usd: number
-          singleton: boolean
           updated_at: string
           work_hours: Json
+          workspace_id: string
         }
         Insert: {
           created_at?: string
@@ -122,9 +125,9 @@ export type Database = {
           id?: string
           max_tasks_per_run?: number
           monthly_budget_usd?: number
-          singleton?: boolean
           updated_at?: string
           work_hours?: Json
+          workspace_id: string
         }
         Update: {
           created_at?: string
@@ -134,9 +137,9 @@ export type Database = {
           id?: string
           max_tasks_per_run?: number
           monthly_budget_usd?: number
-          singleton?: boolean
           updated_at?: string
           work_hours?: Json
+          workspace_id?: string
         }
         Relationships: [
           {
@@ -167,6 +170,7 @@ export type Database = {
           slug: string
           updated_at: string
           width: number
+          workspace_id: string
         }
         Insert: {
           color: string
@@ -179,6 +183,7 @@ export type Database = {
           slug: string
           updated_at?: string
           width?: number
+          workspace_id: string
         }
         Update: {
           color?: string
@@ -191,6 +196,7 @@ export type Database = {
           slug?: string
           updated_at?: string
           width?: number
+          workspace_id?: string
         }
         Relationships: []
       }
@@ -212,6 +218,7 @@ export type Database = {
           system_prompt: string
           tokens_used_today: number
           updated_at: string
+          workspace_id: string
         }
         Insert: {
           created_at?: string
@@ -230,6 +237,7 @@ export type Database = {
           system_prompt: string
           tokens_used_today?: number
           updated_at?: string
+          workspace_id?: string
         }
         Update: {
           created_at?: string
@@ -248,6 +256,7 @@ export type Database = {
           system_prompt?: string
           tokens_used_today?: number
           updated_at?: string
+          workspace_id?: string
         }
         Relationships: [
           {
@@ -407,6 +416,7 @@ export type Database = {
           revenue: number
           status: Database["public"]["Enums"]["project_status"]
           updated_at: string
+          workspace_id: string
         }
         Insert: {
           created_at?: string
@@ -417,6 +427,7 @@ export type Database = {
           revenue?: number
           status?: Database["public"]["Enums"]["project_status"]
           updated_at?: string
+          workspace_id?: string
         }
         Update: {
           created_at?: string
@@ -427,6 +438,7 @@ export type Database = {
           revenue?: number
           status?: Database["public"]["Enums"]["project_status"]
           updated_at?: string
+          workspace_id?: string
         }
         Relationships: [
           {
@@ -447,6 +459,7 @@ export type Database = {
           message: string
           task_id: string
           updated_at: string
+          workspace_id: string
         }
         Insert: {
           created_at?: string
@@ -456,6 +469,7 @@ export type Database = {
           message: string
           task_id: string
           updated_at?: string
+          workspace_id?: string
         }
         Update: {
           created_at?: string
@@ -465,6 +479,7 @@ export type Database = {
           message?: string
           task_id?: string
           updated_at?: string
+          workspace_id?: string
         }
         Relationships: [
           {
@@ -506,6 +521,7 @@ export type Database = {
           token_output: number
           updated_at: string
           used_model_id: string | null
+          workspace_id: string
         }
         Insert: {
           assigned_employee_id: string
@@ -529,6 +545,7 @@ export type Database = {
           token_output?: number
           updated_at?: string
           used_model_id?: string | null
+          workspace_id?: string
         }
         Update: {
           assigned_employee_id?: string
@@ -552,6 +569,7 @@ export type Database = {
           token_output?: number
           updated_at?: string
           used_model_id?: string | null
+          workspace_id?: string
         }
         Relationships: [
           {
@@ -584,6 +602,36 @@ export type Database = {
           },
         ]
       }
+      workspaces: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          github_repo: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          github_repo?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          github_repo?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -591,6 +639,7 @@ export type Database = {
     Functions: {
       is_admin: { Args: never; Returns: boolean }
       is_approved: { Args: never; Returns: boolean }
+      seed_workspace: { Args: { p_workspace: string }; Returns: undefined }
     }
     Enums: {
       employee_status: "idle" | "working" | "resting" | "paused"

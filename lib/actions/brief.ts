@@ -29,14 +29,14 @@ export async function planBrief(_prev: PlanResult, fd: FormData): Promise<PlanRe
     const { db, me } = await requireAdmin();
     const projectId = await resolveProjectId(db, me.id, fd);
     const brief = String(fd.get("brief") ?? "").trim();
-    if (!projectId) return { ok: false, error: "프로젝트를 고르세요." };
+    if (!projectId) return { ok: false, error: "업무를 고르세요." };
     if (brief.length < 5) return { ok: false, error: "브리프를 5자 이상 써 주세요." };
     const { data, error } = await db.functions.invoke<{
       brief_id?: string; plan?: BriefPlan; model?: string; cost_usd?: number; error?: string;
     }>("plan-brief", { body: { project_id: projectId, brief } });
     if (error) return { ok: false, error: "AI 팀장 호출 실패" };
     if (!data?.plan || !data.brief_id) return { ok: false, error: data?.error ?? "계획을 받지 못했습니다." };
-    revalidatePath("/office");
+    revalidatePath("/", "layout");
     return { ok: true, briefId: data.brief_id, plan: data.plan, model: data.model ?? "", costUsd: data.cost_usd ?? 0 };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "실패" };
@@ -74,6 +74,6 @@ export async function applyBrief(fd: FormData): Promise<{ created: number }> {
   if (insertError) throw insertError;
   await db.from("briefs").update({ status: "applied" }).eq("id", brief.id);
   await insertAuditLog(db, { actor_id: me.id, action: "brief.apply", target_type: "brief", target_id: brief.id });
-  revalidatePath("/office");
+  revalidatePath("/", "layout");
   return { created: rows.length };
 }

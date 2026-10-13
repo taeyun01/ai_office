@@ -6,12 +6,12 @@ import { type NextRequest } from "next/server";
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
-  const nextParam = searchParams.get("next") ?? "/office";
+  const nextParam = searchParams.get("next") ?? "/projects";
   // Only allow same-origin relative paths to avoid open redirects.
   const next =
     nextParam.startsWith("/") && !nextParam.startsWith("//")
       ? nextParam
-      : "/office";
+      : "/projects";
 
   if (code) {
     const supabase = await createClient();

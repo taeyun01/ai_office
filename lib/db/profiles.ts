@@ -1,4 +1,5 @@
 import type { Db, Profile } from "@/types";
+import type { Json } from "@/types/database";
 
 export async function getMyProfile(db: Db) {
   // admin은 RLS로 모든 profiles를 읽을 수 있으므로 본인 id로 한정
@@ -39,7 +40,7 @@ export async function setProfileStatus(
 
 export async function insertAuditLog(
   db: Db,
-  log: { actor_id: string; action: string; target_type?: string; target_id?: string },
+  log: { actor_id: string; action: string; target_type?: string; target_id?: string; metadata?: Json },
 ) {
   const { error } = await db.from("audit_logs").insert(log);
   if (error) throw error;

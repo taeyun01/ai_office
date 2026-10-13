@@ -20,8 +20,8 @@ export function ProjectTable({ projects, departments }: { projects: ProjectRow[]
   return (
     <section>
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-xl font-bold">프로젝트 ({projects.length})</h2>
-        <Button size="sm" onClick={() => setEditing("new")}>프로젝트 추가</Button>
+        <h2 className="text-xl font-bold">업무 ({projects.length})</h2>
+        <Button size="sm" onClick={() => setEditing("new")}>업무 추가</Button>
       </div>
       {delState && !delState.ok && <p className="mb-2 text-sm text-red-400">{delState.error}</p>}
       <table className="w-full text-sm">
@@ -48,10 +48,10 @@ export function ProjectTable({ projects, departments }: { projects: ProjectRow[]
                   <Button size="sm" variant="ghost" onClick={() => setEditing(p)}>수정</Button>
                   <form
                     action={delAction}
-                    onSubmit={(e) => { if (!confirm(`'${p.name}' 프로젝트를 삭제할까요?`)) e.preventDefault(); }}
+                    onSubmit={(e) => { if (!confirm(`'${p.name}' 업무를 삭제할까요?`)) e.preventDefault(); }}
                   >
                     <input type="hidden" name="id" value={p.id} />
-                    <Button size="sm" variant="outline" type="submit" disabled={p.taskTotal > 0} title={p.taskTotal > 0 ? "작업이 있는 프로젝트는 삭제할 수 없습니다" : undefined}>
+                    <Button size="sm" variant="outline" type="submit" disabled={p.taskTotal > 0} title={p.taskTotal > 0 ? "작업이 있는 업무는 삭제할 수 없습니다" : undefined}>
                       삭제
                     </Button>
                   </form>
@@ -61,7 +61,7 @@ export function ProjectTable({ projects, departments }: { projects: ProjectRow[]
           })}
         </tbody>
       </table>
-      <Modal open={editing !== null} title={editing === "new" ? "프로젝트 추가" : "프로젝트 수정"} onClose={() => setEditing(null)}>
+      <Modal open={editing !== null} title={editing === "new" ? "업무 추가" : "업무 수정"} onClose={() => setEditing(null)}>
         <ProjectForm
           key={editing === "new" || editing === null ? "new" : editing.id}
           project={editing === "new" || editing === null ? undefined : editing}

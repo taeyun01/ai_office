@@ -34,15 +34,17 @@ async function log(db: Db, taskId: string, employeeId: string, level: "info" | "
   await db.from("task_logs").insert({ task_id: taskId, employee_id: employeeId, level, message });
 }
 
-async function runEngine(db: Db) {
+async function runEngine(db: Db, workspaceId: string) {
   const started = Date.now();
-  const { data: settings } = await db.from("budget_settings").select("*").single();
+  const { data: settings } = await db.from("budget_settings").select("*").eq("workspace_id", workspaceId).single();
   if (!settings || settings.global_paused) return { skipped: "global_paused" };
 
-  const { data: monthCost } = await db.rpc("month_cost_usd");
+  const { data: monthCost } = await db.rpc("month_cost_usd", { p_workspace: workspaceId });
   if (Number(monthCost) >= Number(settings.monthly_budget_usd)) {
     await db.from("audit_logs").insert({
       action: "engine.budget_exceeded",
+      target_type: "workspace",
+      target_id: workspaceId,
       metadata: { month_cost_usd: monthCost, monthly_budget_usd: settings.monthly_budget_usd },
     });
     console.warn("월 예산 초과로 엔진 종료", monthCost, settings.monthly_budget_usd);
@@ -51,7 +53,7 @@ async function runEngine(db: Db) {
 
   await db.rpc("recover_stale_tasks");
   await db.rpc("rest_exhausted_employees");
-  const { data: tasks, error } = await db.rpc("claim_tasks", { p_limit: settings.max_tasks_per_run });
+  const { data: tasks, error } = await db.rpc("claim_tasks", { p_limit: settings.max_tasks_per_run, p_workspace: workspaceId });
   if (error) throw error;
   if (!tasks || tasks.length === 0) return { processed: 0 }; // queued가 없으면 LLM 호출 0회
 
@@ -139,7 +141,16 @@ Deno.serve(async (req) => {
   const db = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
   if (!(await authorize(req, db))) return new Response("Unauthorized", { status: 401 });
 
-  const p = runEngine(db).catch((e) => console.error("engine error", maskSecrets(String(e))));
+  // workspace_id가 있으면 그 프로젝트만, 없으면 모든 프로젝트를 차례로
+  const body = await req.json().catch(() => ({}));
+  const ids: string[] = body.workspace_id
+    ? [String(body.workspace_id)]
+    : ((await db.from("workspaces").select("id")).data ?? []).map((w: { id: string }) => w.id);
+  const p = (async () => {
+    for (const id of ids) {
+      await runEngine(db, id).catch((e) => console.error("engine error", id, maskSecrets(String(e))));
+    }
+  })();
   EdgeRuntime.waitUntil(p);
   return new Response(JSON.stringify({ started: true }), {
     status: 202,

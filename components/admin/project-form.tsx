@@ -7,7 +7,7 @@ import type { ActionResult } from "@/lib/actions/admin";
 import { saveProject } from "@/lib/actions/projects";
 import type { Department, Project } from "@/types";
 
-// 프로젝트 추가·수정 공용 폼
+// 업무 추가·수정 공용 폼
 export function ProjectForm({
   project,
   departments,

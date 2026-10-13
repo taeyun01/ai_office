@@ -64,8 +64,8 @@ export function ResultsView({
           className={fieldClass}
         />
         <div className="grid grid-cols-2 gap-2">
-          <select aria-label="프로젝트" value={projectId} onChange={(e) => setProjectId(e.target.value)} className={fieldClass}>
-            <option value="">전체 프로젝트</option>
+          <select aria-label="업무" value={projectId} onChange={(e) => setProjectId(e.target.value)} className={fieldClass}>
+            <option value="">전체 업무</option>
             {projects.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}

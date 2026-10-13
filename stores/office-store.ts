@@ -4,6 +4,7 @@ import type { BudgetSettings, Department, Employee, LlmModel, Project, Task, Tas
 type RowMap<T extends { id: string }> = Record<string, T>;
 
 export type OfficeState = {
+  workspaceId: string;
   departments: Department[];
   projects: Project[];
   llmModels: LlmModel[];
@@ -13,6 +14,7 @@ export type OfficeState = {
   taskLogs: RowMap<TaskLog>;
   selectedEmployeeId: string | null;
   hydrate: (data: {
+    workspaceId: string;
     departments: Department[];
     projects: Project[];
     llmModels: LlmModel[];
@@ -35,6 +37,7 @@ const byId = <T extends { id: string }>(rows: T[]): RowMap<T> =>
   Object.fromEntries(rows.map((r) => [r.id, r]));
 
 export const useOfficeStore = create<OfficeState>((set) => ({
+  workspaceId: "",
   departments: [],
   projects: [],
   llmModels: [],
@@ -45,6 +48,8 @@ export const useOfficeStore = create<OfficeState>((set) => ({
   selectedEmployeeId: null,
   hydrate: (d) =>
     set({
+      workspaceId: d.workspaceId,
+      selectedEmployeeId: null,
       departments: d.departments,
       projects: d.projects,
       llmModels: d.llmModels,

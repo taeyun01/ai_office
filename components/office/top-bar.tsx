@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { fieldClass } from "@/components/ui/modal";
-import type { Department } from "@/types";
+import type { Department, Workspace } from "@/types";
 
 export type OfficeFilters = {
   departmentId: string | null;
@@ -11,16 +12,27 @@ export type OfficeFilters = {
 
 // 상단 바: 부서 선택기 + 필터 (§7.6)
 export function TopBar({
+  workspace,
   departments,
   filters,
   onChange,
 }: {
+  workspace: Workspace;
   departments: Department[];
   filters: OfficeFilters;
   onChange: (f: OfficeFilters) => void;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-lg border border-cyan-500/30 bg-[#0b1020]/80 px-3 py-2 text-xs text-slate-200 backdrop-blur">
+      <div className="flex min-w-0 flex-col">
+        <Link href="/projects" className="text-[11px] text-slate-400 hover:text-slate-200">← 프로젝트 목록</Link>
+        <span className="max-w-[14rem] truncate text-sm font-semibold text-slate-100" title={workspace.name}>{workspace.name}</span>
+        {workspace.github_repo && (
+          <a href={`https://github.com/${workspace.github_repo}`} target="_blank" rel="noreferrer" className="truncate text-[11px] text-cyan-300 hover:underline">
+            {workspace.github_repo}
+          </a>
+        )}
+      </div>
       <select
         aria-label="부서 선택"
         value={filters.departmentId ?? ""}
