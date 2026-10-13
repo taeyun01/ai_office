@@ -7,19 +7,22 @@ import { Avatar } from "./avatar";
 import { CameraRig } from "./camera-rig";
 import { DepartmentZone } from "./department-zone";
 import { Desks } from "./desks";
-import { REST_AREA, type SceneDepartment, type SceneEmployee } from "./types";
+import { BackWall, Bookshelf, FloorLamp, Lounge, MeetingRoom, Plant } from "./props";
+import { type SceneDepartment, type SceneEmployee } from "./types";
 
 // 아바타 하나. memo라 해당 직원 row가 바뀔 때만 다시 그린다. (책상은 Desks에서 인스턴싱)
 const EmployeeUnit = memo(function EmployeeUnit({
   employee: e,
   color,
   restSlot,
+  meetingIndex,
   selected,
   onSelect,
 }: {
   employee: SceneEmployee;
   color: string;
   restSlot: number;
+  meetingIndex: number;
   selected: boolean;
   onSelect: (id: string) => void;
 }) {
@@ -33,7 +36,7 @@ const EmployeeUnit = memo(function EmployeeUnit({
         onPointerOver={() => (document.body.style.cursor = "pointer")}
         onPointerOut={() => (document.body.style.cursor = "auto")}
       >
-        <Avatar employee={e} color={color} restSlot={restSlot} />
+        <Avatar employee={e} color={color} restSlot={restSlot} meetingIndex={meetingIndex} />
         {/* 책상+의자 영역 투명 히트박스: 책상(인스턴스)을 클릭해도 이 직원이 선택되게 */}
         <mesh visible={false} position={[e.seat_x, 0.7, e.seat_z - 0.5]}>
           <boxGeometry args={[1.8, 1.4, 2]} />
@@ -62,6 +65,10 @@ export function OfficeScene({
   // 휴게 공간 자리: resting 직원 순서대로 배정
   const restSlots = new Map(
     employees.filter((e) => e.status === "resting").map((e, i) => [e.id, i]),
+  );
+  // 회의실 자리: 소집된 직원 순서대로
+  const meetingSlots = new Map(
+    employees.filter((e) => e.in_meeting).map((e, i) => [e.id, i]),
   );
 
   return (
@@ -96,15 +103,23 @@ export function OfficeScene({
         {/* 바닥 + 그리드 */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
           <planeGeometry args={[60, 60]} />
-          <meshStandardMaterial color="#141a2e" />
+          <meshStandardMaterial color="#182038" />
         </mesh>
         <gridHelper args={[60, 60, "#263047", "#1b2238"]} position={[0, 0.003, 0]} />
 
-        {/* 휴게 공간 */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[REST_AREA.x, 0.01, REST_AREA.z]} receiveShadow>
-          <planeGeometry args={[10, 4]} />
-          <meshStandardMaterial color="#22d3ee" transparent opacity={0.08} />
-        </mesh>
+        {/* 소품: 뒷벽·창문, 라운지(탕비실), 회의실, 화분·책장·조명 */}
+        <BackWall />
+        <Lounge />
+        <MeetingRoom occupied={meetingSlots.size} />
+        {departments.map((d) => (
+          <group key={`props-${d.id}`}>
+            <Plant position={[d.position_x - d.width / 2 + 0.6, 0, d.position_z + d.depth / 2 - 0.6]} />
+            <Bookshelf position={[d.position_x + d.width / 2 - 0.5, 0, d.position_z - d.depth / 2 + 1.2]} rotation={-Math.PI / 2} />
+          </group>
+        ))}
+        <FloorLamp position={[-18, 0, 2]} />
+        <FloorLamp position={[18, 0, 2]} />
+        <Plant position={[0, 0, 10.5]} />
 
         {departments.map((d) => (
           <DepartmentZone
@@ -120,6 +135,7 @@ export function OfficeScene({
             employee={e}
             color={colorOf.get(e.department_id) ?? "#94a3b8"}
             restSlot={restSlots.get(e.id) ?? 0}
+            meetingIndex={meetingSlots.get(e.id) ?? 0}
             selected={e.id === selectedId}
             onSelect={onSelect}
           />

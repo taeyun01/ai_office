@@ -157,6 +157,7 @@ export type Database = {
           department_id: string
           energy: number
           id: string
+          in_meeting: boolean
           model_id: string
           name: string
           role: string
@@ -174,6 +175,7 @@ export type Database = {
           department_id: string
           energy?: number
           id?: string
+          in_meeting?: boolean
           model_id: string
           name: string
           role: string
@@ -191,6 +193,7 @@ export type Database = {
           department_id?: string
           energy?: number
           id?: string
+          in_meeting?: boolean
           model_id?: string
           name?: string
           role?: string

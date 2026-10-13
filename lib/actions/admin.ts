@@ -146,3 +146,18 @@ export async function createTask(_prev: ActionResult, fd: FormData): Promise<Act
     });
   });
 }
+
+// 회의실 소집/복귀 (연출용 상태). Realtime으로 모든 접속자 화면에서 직원들이 걸어간다.
+export async function setMeeting(fd: FormData) {
+  const { db, me } = await requireAdmin();
+  const ids = fd.getAll("ids").map(String).filter(Boolean);
+  const inMeeting = str(fd, "in_meeting") === "true";
+  if (ids.length === 0) return;
+  const { error } = await db.from("employees").update({ in_meeting: inMeeting }).in("id", ids);
+  if (error) throw error;
+  await insertAuditLog(db, {
+    actor_id: me.id,
+    action: inMeeting ? "meeting.call" : "meeting.dismiss",
+    target_type: "employee",
+  });
+}

@@ -65,7 +65,7 @@ export function EmployeePanel({
 
       <div className="flex flex-col gap-1.5">
         <Row label="부서"><span style={{ color: dept?.color }}>{dept?.name}</span></Row>
-        <Row label="상태">{STATUS_LABEL[employee.status]}</Row>
+        <Row label="상태">{STATUS_LABEL[employee.status]}{employee.in_meeting && " · 회의 중"}</Row>
         <Row label="모델">{model?.display_name ?? "-"}</Row>
         <Row label="현재 작업">{current?.title ?? "없음"}</Row>
         <Row label="에너지">{employee.energy}%</Row>
