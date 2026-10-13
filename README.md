@@ -1,37 +1,31 @@
-# Next.js + Supabase + Kakao 보일러플레이트
+# AIOffice
 
-Supabase 공식 `with-supabase` 스타터 + 카카오 로그인.
+LLM을 호출해 결과물을 만드는 AI 직원들을 3D 아이소메트릭 오피스에서 관리하는 웹 앱. 요구사항은 `docs/ai-office-prd.md`.
 
-## 새 프로젝트 시작
+## 시작
 
 ```bash
-npx create-next-app -e https://github.com/<you>/<this-repo> my-app
 cp .env.example .env.local   # Supabase URL / publishable key 입력
+npm install
 npm run dev
 ```
 
-## 프로젝트마다 할 설정 체크리스트
+Supabase 쪽은 `supabase/migrations/*.sql`을 순서대로 적용하고 `supabase/seed.sql`을 실행한다. Edge Function은 `supabase/functions/*`를 배포한다 (`verify_jwt = false`, 함수 안에서 직접 인증).
 
-### Kakao Developers (developers.kakao.com)
-- [ ] 애플리케이션 추가
-- [ ] 카카오 로그인 → 활성화 ON
-- [ ] Redirect URI: `https://<project-ref>.supabase.co/auth/v1/callback`
-- [ ] 보안 → Client Secret 발급 + 활성화
-- [ ] 동의항목: 닉네임, 프로필 사진 (이메일 `account_email`은 비즈앱만 가능)
-
-### Supabase 대시보드
-- [ ] Authentication → Providers → Kakao: REST API 키 / Client Secret 입력
-- [ ] 비즈앱 아니면 "Allow users without an email" 켜기 (안 켜면 로그인 실패)
-- [ ] Authentication → URL Configuration → Redirect URLs:
-  - `http://localhost:3000/auth/callback`
-  - `https://<배포도메인>/auth/callback`
+직접 해야 하는 설정(리다이렉트 URL, LLM API 키 등)은 `docs/TODO-for-you.md`.
 
 ## 구조
-- `app/page.tsx` — 빈 홈 (여기서부터 시작)
-- `app/auth/login` — 카카오 로그인 페이지 (버튼만)
-- `app/protected` — 로그인해야 접근 가능한 페이지 (로그인 후 기본 이동 경로)
-- `app/test` — 카카오/Supabase 설정 점검 페이지. **배포 전 `app/test`와 `lib/supabase/proxy.ts`의 `/test` 줄 삭제**
-- `components/kakao-login-button.tsx` — 카카오 로그인 버튼 (`next` prop으로 로그인 후 이동 경로 지정)
-- `app/auth/callback/route.ts` — OAuth code → 세션 교환
-- `lib/supabase/*`, `proxy.ts` — Supabase 클라이언트, 세션 갱신, 미로그인 시 `/auth/login` 리다이렉트
-- UI는 shadcn `button`, `card`만 남김. 더 필요하면 `npx shadcn@latest add <name>`
+
+- `app/` — 라우트. `login`, `signup`, `pending`, `rejected`, `office`(3D 오피스), `admin/users|models|costs`
+- `components/scene/` — R3F 3D 컴포넌트. props만 받고 DB 호출 없음
+- `components/office/` — 오피스 화면 UI (상단 바, KPI, 직원 패널, 관리자 툴바, 폼)
+- `components/admin/` — 관리자 페이지 UI
+- `lib/db/` — 모든 Supabase 쿼리. `lib/actions/` — 서버 액션(admin 권한 체크 + RLS 이중 차단)
+- `lib/supabase/` — 클라이언트/서버/미들웨어 Supabase 생성. `lib/realtime.ts` — 실시간 구독 → `stores/office-store.ts`(Zustand)
+- `supabase/functions/run-agent-tasks` — 작업 엔진(pg_cron 또는 "지금 실행"이 호출). `verify-provider-key` — API 키 등록/삭제/검증(Vault)
+- `types/database.ts` — Supabase 생성 타입 (`npx supabase gen types` 또는 MCP)
+
+## 권한
+
+- `admin`: 모든 것. `member`(승인됨): 읽기 전용. `pending`/`rejected`: 안내 화면만.
+- 첫 관리자 이메일은 `supabase/migrations/20261013000001_init.sql`의 `handle_new_user()`에 하드코딩.

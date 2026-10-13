@@ -1,6 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { hasEnvVars } from "../utils";
+import type { Database } from "@/types/database";
+
+const PUBLIC_PATHS = ["/login", "/signup"];
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -15,7 +18,7 @@ export async function updateSession(request: NextRequest) {
 
   // With Fluid compute, don't put this client in a global environment
   // variable. Always create a new one on each request.
-  const supabase = createServerClient(
+  const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
@@ -47,17 +50,38 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
 
-  if (
-    request.nextUrl.pathname !== "/" &&
-    !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/test") &&
-    !request.nextUrl.pathname.startsWith("/auth")
-  ) {
-    // no user, potentially respond by redirecting the user to the login page
+  const path = request.nextUrl.pathname;
+  const isPublic = PUBLIC_PATHS.includes(path) || path.startsWith("/auth");
+  const redirectTo = (pathname: string) => {
     const url = request.nextUrl.clone();
-    url.pathname = "/auth/login";
+    url.pathname = pathname;
+    url.search = "";
     return NextResponse.redirect(url);
+  };
+
+  if (!user) {
+    return isPublic ? supabaseResponse : redirectTo("/login");
+  }
+
+  // 로그인 사용자: 승인 상태에 따라 갈 수 있는 경로를 제한 (RLS와 별개로 UI 진입을 막음)
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, status")
+    .eq("id", user.sub)
+    .single();
+  const status = profile?.status ?? "pending";
+
+  if (status !== "approved") {
+    const home = status === "rejected" ? "/rejected" : "/pending";
+    return path === home || path.startsWith("/auth")
+      ? supabaseResponse
+      : redirectTo(home);
+  }
+  if (isPublic || ["/", "/pending", "/rejected"].includes(path)) {
+    return redirectTo("/office");
+  }
+  if (path.startsWith("/admin") && profile?.role !== "admin") {
+    return redirectTo("/office");
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.

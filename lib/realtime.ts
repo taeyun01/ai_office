@@ -1,0 +1,53 @@
+"use client";
+
+import { createClient } from "@/lib/supabase/client";
+import { useOfficeStore } from "@/stores/office-store";
+import type { BudgetSettings, Employee, Task, TaskLog } from "@/types";
+
+const TABLES = {
+  employees: "employees",
+  tasks: "tasks",
+  task_logs: "taskLogs",
+} as const;
+
+// employees / tasks / task_logs / budget_settings 변경을 구독해 스토어에 반영. 해제 함수를 돌려준다.
+export function subscribeOffice() {
+  const supabase = createClient();
+  const { upsert, remove, setBudget } = useOfficeStore.getState();
+  const channel = supabase.channel("office");
+
+  for (const [table, key] of Object.entries(TABLES) as [keyof typeof TABLES, (typeof TABLES)[keyof typeof TABLES]][]) {
+    channel.on(
+      "postgres_changes",
+      { event: "*", schema: "public", table },
+      (payload) => {
+        if (payload.eventType === "DELETE") {
+          remove(key, String(payload.old.id));
+        } else {
+          upsert(key, payload.new as Employee | Task | TaskLog);
+        }
+      },
+    );
+  }
+  channel.on(
+    "postgres_changes",
+    { event: "UPDATE", schema: "public", table: "budget_settings" },
+    (payload) => setBudget(payload.new as BudgetSettings),
+  );
+
+  // RLS가 적용된 변경을 받으려면 사용자 JWT로 채널에 들어가야 한다 (anon 키로 들어가면 아무것도 안 옴)
+  let cancelled = false;
+  supabase.auth.getSession().then(({ data }) => {
+    // StrictMode의 mount→unmount→mount 사이에 해제됐으면 구독하지 않는다 (같은 topic 중복 join 방지)
+    if (cancelled) return;
+    if (data.session) supabase.realtime.setAuth(data.session.access_token);
+    channel.subscribe((status, err) => {
+      if (status !== "SUBSCRIBED") console.warn("[realtime]", status, err?.message);
+    });
+  });
+
+  return () => {
+    cancelled = true;
+    supabase.removeChannel(channel);
+  };
+}
