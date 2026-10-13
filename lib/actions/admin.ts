@@ -1,6 +1,7 @@
 "use server";
 
 import { requireAdmin } from "@/lib/auth";
+import { NEW_PROJECT } from "@/lib/constants";
 import {
   deleteEmployee as dbDeleteEmployee,
   insertEmployee,
@@ -125,8 +126,23 @@ export async function setEmployeePaused(fd: FormData) {
 export async function createTask(_prev: ActionResult, fd: FormData): Promise<ActionResult> {
   return run(async () => {
     const { db, me } = await requireAdmin();
+    let projectId = str(fd, "project_id");
+    // 드롭다운에서 "새 프로젝트"를 고르면 먼저 프로젝트를 만든다
+    if (projectId === NEW_PROJECT) {
+      const name = str(fd, "new_project_name");
+      const departmentId = str(fd, "new_project_department_id");
+      if (!name || !departmentId) throw new Error("새 프로젝트 이름과 부서를 입력하세요.");
+      const { data: project, error } = await db
+        .from("projects")
+        .insert({ name, department_id: departmentId, status: "active" })
+        .select()
+        .single();
+      if (error) throw error;
+      projectId = project.id;
+      await insertAuditLog(db, { actor_id: me.id, action: "project.create", target_type: "project", target_id: project.id });
+    }
     const row = {
-      project_id: str(fd, "project_id"),
+      project_id: projectId,
       assigned_employee_id: str(fd, "assigned_employee_id"),
       title: str(fd, "title"),
       instruction: str(fd, "instruction"),
