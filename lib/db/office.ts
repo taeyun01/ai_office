@@ -63,3 +63,14 @@ export async function listAllTaskLogs(db: Db) {
   if (error) throw error;
   return data;
 }
+
+export async function upsertProject(db: Db, row: TablesInsert<"projects">) {
+  const { data, error } = await db.from("projects").upsert(row).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteProject(db: Db, id: string) {
+  const { error } = await db.from("projects").delete().eq("id", id);
+  if (error) throw error;
+}

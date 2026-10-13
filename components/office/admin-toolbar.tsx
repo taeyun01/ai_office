@@ -40,6 +40,7 @@ export function AdminToolbar({
   return (
     <div className="flex items-center gap-2">
       <Link href="/admin/users" className="text-xs text-slate-300 hover:underline">사용자</Link>
+      <Link href="/admin/projects" className="text-xs text-slate-300 hover:underline">프로젝트</Link>
       <Link href="/admin/models" className="text-xs text-slate-300 hover:underline">모델 · 키</Link>
       <Link href="/admin/costs" className="text-xs text-slate-300 hover:underline">비용</Link>
       <Button size="sm" onClick={() => setModal("hire")}>직원 채용</Button>
