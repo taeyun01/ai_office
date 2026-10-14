@@ -67,7 +67,7 @@ export function EmployeePanel({
       <div className="flex flex-col gap-1.5">
         <Row label="부서"><span style={{ color: dept?.color }}>{dept?.name}</span></Row>
         <Row label="상태">{STATUS_LABEL[employee.status]}{employee.in_meeting && " · 회의 중"}</Row>
-        <Row label="모델">{model?.display_name ?? "-"}</Row>
+        <Row label="모델">{employee.works_on_code ? "Claude Code (GitHub)" : model?.display_name ?? "-"}</Row>
         <Row label="현재 작업">{current?.title ?? "없음"}</Row>
         <Row label="에너지">{employee.energy}%</Row>
         <Row label="오늘 토큰">
@@ -102,7 +102,14 @@ export function EmployeePanel({
           {myTasks.map((t) => (
             <li key={t.id} className="flex justify-between gap-2">
               <span className="truncate">{t.title}</span>
-              <span className="shrink-0 text-xs text-slate-400">{t.status}</span>
+              <span className="flex shrink-0 gap-1.5 text-xs text-slate-400">
+                {t.github_pr_url ? (
+                  <a href={t.github_pr_url} target="_blank" rel="noreferrer" className="text-cyan-300 hover:underline">PR</a>
+                ) : t.github_issue_url ? (
+                  <a href={t.github_issue_url} target="_blank" rel="noreferrer" className="text-cyan-300 hover:underline">#{t.github_issue_number}</a>
+                ) : null}
+                {t.status}
+              </span>
             </li>
           ))}
         </ul>

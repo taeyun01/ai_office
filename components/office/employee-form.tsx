@@ -103,6 +103,13 @@ export function EmployeeForm({
           ))}
         </select>
       </div>
+      <label className="flex items-start gap-2 rounded-md border border-slate-700 p-2 text-sm">
+        <input type="checkbox" name="works_on_code" defaultChecked={employee?.works_on_code ?? false} className="mt-0.5" />
+        <span>
+          코드 작업 담당
+          <span className="block text-xs text-slate-400">작업을 프로젝트 GitHub 저장소에 이슈로 올리고, Claude Code가 PR을 만듭니다(위 LLM 모델 대신).</span>
+        </span>
+      </label>
       <div>
         <label className={labelClass}>일일 토큰 한도</label>
         <input name="daily_token_limit" type="number" min={0} defaultValue={employee?.daily_token_limit ?? 50000} className={fieldClass} />

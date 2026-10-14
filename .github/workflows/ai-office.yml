@@ -1,0 +1,48 @@
+# AIOffice "코드 작업" 직원이 올린 이슈(ai-office 라벨)를 Claude Code가 처리하고 PR을 연다.
+# AIOffice github-sync가 PR 본문의 "Closes #이슈번호"를 보고 작업을 완료 처리한다.
+# 필요: 저장소 시크릿 ANTHROPIC_API_KEY, Settings → Actions → "Allow GitHub Actions to create and approve pull requests"
+name: AI Office
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  claude:
+    # 라벨은 쓰기 권한이 있는 사람(또는 AIOffice 토큰)만 붙일 수 있다
+    if: github.event.label.name == 'ai-office'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            REPO: ${{ github.repository }}
+            ISSUE: #${{ github.event.issue.number }}
+
+            당신은 AIOffice의 AI 직원입니다. 이 이슈를 처리하세요.
+            1. `gh issue view ${{ github.event.issue.number }}` 로 이슈 본문(작업 지시와 담당 직원 역할)을 읽으세요.
+            2. 저장소의 CLAUDE.md / AGENTS.md 규칙을 따르세요.
+            3. `claude/issue-${{ github.event.issue.number }}` 브랜치에서 변경하고 커밋·푸시하세요.
+            4. `npm ci` 후 `npm run typecheck` 가 통과해야 합니다. 통과하지 못하면 고치세요.
+            5. `gh pr create --base main` 으로 PR을 만드세요. PR 본문 첫 줄은 `Closes #${{ github.event.issue.number }}`, 그 아래에 변경 요약을 한국어로 쓰세요.
+            6. PR을 직접 머지하지 마세요. 사람이 리뷰합니다.
+          claude_args: |
+            --allowedTools "Bash(gh issue view:*),Bash(gh pr create:*),Bash(git:*),Bash(npm ci),Bash(npm run typecheck),Bash(npm run lint),Edit,Write,Read,Glob,Grep"

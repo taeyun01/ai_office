@@ -1,5 +1,14 @@
 # 직접 해야 할 일
 
+## GitHub 연동 (AI 직원이 코드로 일하게 하기)
+
+자세한 순서는 [`docs/github-setup.md`](./github-setup.md). 요약:
+
+- [ ] `taeyun01/ai_office` 저장소 시크릿 `ANTHROPIC_API_KEY` 등록 (`/install-github-app` 또는 `gh secret set ANTHROPIC_API_KEY -R taeyun01/ai_office`)
+- [x] Actions가 PR을 만들 수 있게 허용 — Claude가 설정함 (기본 토큰 권한은 read 유지)
+- [ ] Fine-grained 토큰 만들기 (Issues RW, Pull requests R, Contents R, 이 저장소만) → 오피스 **비용** 페이지의 **GitHub 연동** 카드에 등록
+- [ ] 첫 테스트: 김민준에게 작은 코드 작업 지시 → 지금 실행 → PR 확인
+
 Claude가 대신 할 수 없는 항목. 끝낸 건 체크하세요.
 
 ## Supabase 대시보드

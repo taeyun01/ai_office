@@ -33,7 +33,7 @@ function parseEmployee(fd: FormData) {
   for (const [k, v] of Object.entries(row)) {
     if (v === "") throw new Error(`${k} 값이 비어 있습니다.`);
   }
-  return row;
+  return { ...row, works_on_code: fd.get("works_on_code") === "on" };
 }
 
 async function run(fn: () => Promise<void>): Promise<ActionResult> {

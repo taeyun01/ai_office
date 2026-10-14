@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { BudgetForm } from "@/components/admin/budget-form";
 import { CostChart } from "@/components/admin/cost-chart";
+import { GithubCard } from "@/components/admin/github-card";
 import { getBudgetSettings, listLlmModels } from "@/lib/db/llm";
 import { listEmployees, listTasks } from "@/lib/db/office";
 import { getWorkspace } from "@/lib/db/workspaces";
@@ -69,6 +70,7 @@ async function Content({ params }: { params: Params }) {
   return (
     <div className="flex flex-col gap-8">
       <AdminNav current={`/p/${id}/admin/costs`} workspace={workspace} />
+      <GithubCard workspace={workspace} />
       <section>
         <h2 className="mb-2 text-xl font-bold">최근 30일 일별 비용</h2>
         <CostChart data={days} />

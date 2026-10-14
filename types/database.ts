@@ -219,6 +219,7 @@ export type Database = {
           tokens_used_today: number
           updated_at: string
           workspace_id: string
+          works_on_code: boolean
         }
         Insert: {
           created_at?: string
@@ -238,6 +239,7 @@ export type Database = {
           tokens_used_today?: number
           updated_at?: string
           workspace_id?: string
+          works_on_code?: boolean
         }
         Update: {
           created_at?: string
@@ -257,6 +259,7 @@ export type Database = {
           tokens_used_today?: number
           updated_at?: string
           workspace_id?: string
+          works_on_code?: boolean
         }
         Relationships: [
           {
@@ -522,6 +525,9 @@ export type Database = {
           updated_at: string
           used_model_id: string | null
           workspace_id: string
+          github_issue_number: number | null
+          github_issue_url: string | null
+          github_pr_url: string | null
         }
         Insert: {
           assigned_employee_id: string
@@ -546,6 +552,9 @@ export type Database = {
           updated_at?: string
           used_model_id?: string | null
           workspace_id?: string
+          github_issue_number?: number | null
+          github_issue_url?: string | null
+          github_pr_url?: string | null
         }
         Update: {
           assigned_employee_id?: string
@@ -570,6 +579,9 @@ export type Database = {
           updated_at?: string
           used_model_id?: string | null
           workspace_id?: string
+          github_issue_number?: number | null
+          github_issue_url?: string | null
+          github_pr_url?: string | null
         }
         Relationships: [
           {
@@ -611,6 +623,8 @@ export type Database = {
           id: string
           name: string
           updated_at: string
+          github_secret_id: string | null
+          github_token_hint: string | null
         }
         Insert: {
           created_at?: string
@@ -620,6 +634,8 @@ export type Database = {
           id?: string
           name: string
           updated_at?: string
+          github_secret_id?: string | null
+          github_token_hint?: string | null
         }
         Update: {
           created_at?: string
@@ -629,6 +645,8 @@ export type Database = {
           id?: string
           name?: string
           updated_at?: string
+          github_secret_id?: string | null
+          github_token_hint?: string | null
         }
         Relationships: []
       }

@@ -2,6 +2,7 @@
 // 요청에는 즉시 202로 답하고 실제 처리는 백그라운드에서 한다 (pg_net 타임아웃 회피).
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { createIssue, ensureLabel, GithubError } from "./github.ts";
 import { ENV_KEY, generate, LlmError, maskSecrets, type Provider } from "./llm.ts";
 
 declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void };
@@ -68,6 +69,11 @@ async function runEngine(db: Db, workspaceId: string) {
     return keyCache.get(provider)!;
   };
 
+  // 코드 작업 직원용: 프로젝트 저장소와 GitHub 토큰 (없으면 그 작업은 실패 처리)
+  const { data: workspace } = await db.from("workspaces").select("github_repo").eq("id", workspaceId).single();
+  const { data: ghToken } = await db.rpc("get_github_token", { p_workspace: workspaceId });
+  let labelReady: Promise<void> | null = null;
+
   const results = await Promise.allSettled(
     tasks.map(async (task) => {
       if (Date.now() - started > TIME_BUDGET_MS) {
@@ -86,7 +92,7 @@ async function runEngine(db: Db, workspaceId: string) {
       }
 
       await db.from("employees").update({ status: "working", current_task_id: task.id }).eq("id", eid);
-      await log(db, task.id, eid, "info", `작업 시작 (${model?.display_name ?? "모델 없음"})`);
+      await log(db, task.id, eid, "info", emp.works_on_code ? "코드 작업 시작 (GitHub)" : `작업 시작 (${model?.display_name ?? "모델 없음"})`);
 
       const finishEmployee = async (patch: Record<string, unknown> = {}) =>
         db.from("employees").update({ status: "idle", current_task_id: null, ...patch }).eq("id", eid);
@@ -102,6 +108,37 @@ async function runEngine(db: Db, workspaceId: string) {
         }
         await finishEmployee();
       };
+
+      // 코드 작업: LLM을 직접 부르지 않고 저장소에 이슈를 올린다 → Claude Code Action이 PR 생성 → github-sync가 완료 처리
+      // 직원은 PR이 올라올 때까지 working 상태로 남는다
+      if (emp.works_on_code) {
+        const repo = workspace?.github_repo;
+        const token = ghToken as string | null;
+        if (!repo || !token) return fail("GitHub 연동 안 됨 (프로젝트 설정에서 저장소·토큰 확인)", false);
+        try {
+          labelReady ??= ensureLabel(token, repo);
+          await labelReady;
+          const body = [
+            task.instruction,
+            "",
+            "---",
+            `**담당 AI 직원:** ${emp.name} (${emp.role})`,
+            "",
+            "**직원 역할 지시:**",
+            emp.system_prompt,
+            "",
+            `_AIOffice에서 자동 생성된 이슈입니다. 작업 후 PR 본문에 \`Closes #이슈번호\`를 넣어 주세요._`,
+            `<!-- aioffice-task:${task.id} -->`,
+          ].join("\n");
+          const issue = await createIssue(token, repo, task.title, body);
+          await db.from("tasks").update({ github_issue_number: issue.number, github_issue_url: issue.html_url, used_model_id: null }).eq("id", task.id);
+          await log(db, task.id, eid, "info", `GitHub 이슈 #${issue.number} 생성 → Claude Code가 PR 작업 중`);
+        } catch (e) {
+          const retryable = e instanceof GithubError && (e.status >= 500 || e.status === 403);
+          await fail(e instanceof Error ? e.message : String(e), retryable);
+        }
+        return;
+      }
 
       if (!model) return fail("사용 가능한 모델이 없음", false);
       const apiKey = await keyFor(model.provider as Provider);
